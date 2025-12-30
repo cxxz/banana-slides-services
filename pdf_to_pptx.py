@@ -88,12 +88,30 @@ def parse_pdf_with_mineru(pdf_path: str, filename: str) -> str:
         extract_id: ID for the extracted results directory
     """
     from file_parser_service import FileParserService
+    from utils.self_hosted_mineru import is_self_hosted_mineru, parse_pdf_via_self_hosted_mineru
 
     mineru_token = os.getenv('MINERU_TOKEN')
     mineru_api_base = os.getenv('MINERU_API_BASE', 'https://mineru.net')
 
+    # Self-hosted MinerU (/file_parse) does not use the cloud token flow.
+    if is_self_hosted_mineru(mineru_api_base):
+        upload_folder = os.getenv('UPLOAD_FOLDER')
+        if upload_folder:
+            upload_root = Path(upload_folder)
+        else:
+            # Match the default used later in this script (and FileParserService): ~/uploads
+            upload_root = Path(__file__).resolve().parent.parent.parent / "uploads"
+
+        extract_id, _extract_dir = parse_pdf_via_self_hosted_mineru(
+            Path(pdf_path),
+            mineru_api_base=mineru_api_base,
+            upload_folder=upload_root,
+        )
+        logger.info(f"  MinerU (self-hosted) extract_id: {extract_id}")
+        return extract_id
+
     if not mineru_token:
-        raise ValueError("MINERU_TOKEN not configured in .env file")
+        raise ValueError("MINERU_TOKEN not configured in .env file (required for mineru.net)")
 
     parser = FileParserService(
         mineru_token=mineru_token,
@@ -184,7 +202,7 @@ def create_editable_pptx(
     )
 
 
-def main(pdf_path: str, output_dir: str = None, template_dir: str = None):
+def main(pdf_path: str, output_dir: str = None, template_dir: str = None, mineru_results_dir: str = None):
     """
     Main conversion pipeline
 
@@ -239,25 +257,43 @@ def main(pdf_path: str, output_dir: str = None, template_dir: str = None):
     logger.info(f"  Slide dimensions: {slide_width}x{slide_height}")
     logger.info("")
 
-    # Step 2: Parse with MinerU
-    logger.info("Step 2: Parsing PDF with MinerU...")
-    extract_id = parse_pdf_with_mineru(pdf_path, os.path.basename(pdf_path))
+    # Step 2: Parse with MinerU (or reuse an existing MinerU result dir)
+    if mineru_results_dir:
+        mineru_dir = Path(mineru_results_dir).expanduser().resolve()
+        logger.info("Step 2: Skipping MinerU parsing (using existing results)...")
+        logger.info(f"  MinerU results: {mineru_dir}")
 
-    # Determine MinerU result directory
-    # Note: file_parser_service.py uses a specific path calculation:
-    #   current_file.parent.parent.parent / 'uploads' / 'mineru_files'
-    # This means: script_dir -> parent -> parent -> uploads
-    # For /Users/bill/workspace/banana-slides-services, this becomes /Users/bill/uploads
-    upload_folder = os.getenv('UPLOAD_FOLDER')
-    if not upload_folder:
-        # Match the path calculation in file_parser_service.py
-        # It goes: file_parser_service.py -> parent.parent (workspace) -> parent (bill) -> uploads
-        project_root = script_dir.parent.parent  # Goes up 2 levels from script_dir
-        upload_folder = str(project_root / 'uploads')
+        if not mineru_dir.exists() or not mineru_dir.is_dir():
+            raise ValueError(f"--mineru-results-dir does not exist or is not a directory: {mineru_dir}")
 
-    mineru_result_dir = os.path.join(upload_folder, 'mineru_files', extract_id)
-    logger.info(f"  MinerU results: {mineru_result_dir}")
-    logger.info("")
+        content_list_files = list(mineru_dir.glob("*_content_list.json"))
+        if not content_list_files:
+            raise ValueError(f"No *_content_list.json found in --mineru-results-dir: {mineru_dir}")
+
+        if not (mineru_dir / "layout.json").exists():
+            logger.warning(f"  layout.json not found in {mineru_dir} (will fall back to content_list coords)")
+
+        mineru_result_dir = str(mineru_dir)
+        logger.info("")
+    else:
+        logger.info("Step 2: Parsing PDF with MinerU...")
+        extract_id = parse_pdf_with_mineru(pdf_path, os.path.basename(pdf_path))
+
+        # Determine MinerU result directory
+        # Note: file_parser_service.py uses a specific path calculation:
+        #   current_file.parent.parent.parent / 'uploads' / 'mineru_files'
+        # This means: script_dir -> parent -> parent -> uploads
+        # For /Users/bill/workspace/banana-slides-services, this becomes /Users/bill/uploads
+        upload_folder = os.getenv('UPLOAD_FOLDER')
+        if not upload_folder:
+            # Match the path calculation in file_parser_service.py
+            # It goes: file_parser_service.py -> parent.parent (workspace) -> parent (bill) -> uploads
+            project_root = script_dir.parent.parent  # Goes up 2 levels from script_dir
+            upload_folder = str(project_root / 'uploads')
+
+        mineru_result_dir = os.path.join(upload_folder, 'mineru_files', extract_id)
+        logger.info(f"  MinerU results: {mineru_result_dir}")
+        logger.info("")
 
     # Step 3: Generate clean backgrounds
     logger.info("Step 3: Generating clean backgrounds...")
@@ -299,6 +335,12 @@ if __name__ == "__main__":
         help="Path to input PDF file"
     )
     parser.add_argument(
+        "--mineru-results-dir",
+        default=None,
+        help="If provided, skip MinerU parsing and use this existing MinerU result directory "
+             "(must contain *_content_list.json).",
+    )
+    parser.add_argument(
         "-o", "--output-dir",
         default=None,
         help="Output directory (default: ./output_files)"
@@ -313,7 +355,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        main(args.input_file, output_dir=args.output_dir, template_dir=args.template_dir)
+        main(args.input_file, output_dir=args.output_dir, template_dir=args.template_dir, mineru_results_dir=args.mineru_results_dir)
     except Exception as e:
         logger.error(f"Conversion failed: {e}", exc_info=True)
         sys.exit(1)

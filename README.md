@@ -22,7 +22,9 @@ Convert PDF slides into editable PowerPoint presentations with AI-powered backgr
 ## Requirements
 
 - Python 3.9+
-- [MinerU](https://mineru.net) account for PDF parsing
+- MinerU service for PDF parsing (either):
+  - Cloud: [MinerU](https://mineru.net) account (requires `MINERU_TOKEN`)
+  - Self-hosted: MinerU API server (see [Self-Hosting MinerU](#self-hosting-mineru) section)
 - (Optional) VolcEngine account for AI inpainting
 
 ## Installation
@@ -48,12 +50,66 @@ Copy `.env.example` to `.env` and configure:
 cp .env.example .env
 ```
 
-Required:
-- `MINERU_TOKEN` - Your MinerU API token
+Required (for cloud MinerU):
+- `MINERU_TOKEN` - Your MinerU API token (only required when using mineru.net)
+
+Optional:
+- `MINERU_API_BASE` - MinerU API base URL (default: `https://mineru.net`)
+  - For cloud MinerU: Leave as default or set to `https://mineru.net`
+  - For self-hosted MinerU: Set to your self-hosted instance URL (e.g., `http://localhost:8023`)
+  - The code automatically detects self-hosted instances and uses the appropriate API flow
+  - When using self-hosted MinerU, `MINERU_TOKEN` is not required
 
 Optional (for AI inpainting):
 - `VOLCENGINE_ACCESS_KEY` - VolcEngine access key
 - `VOLCENGINE_SECRET_KEY` - VolcEngine secret key
+
+## Self-Hosted MinerU Support
+
+This codebase supports both cloud MinerU (mineru.net) and self-hosted MinerU services, which use different APIs. The implementation automatically detects which service to use based on the `MINERU_API_BASE` configuration.
+
+### Key Differences
+
+- **Cloud MinerU** (mineru.net):
+  - Uses token-based authentication (`MINERU_TOKEN` required)
+  - Uses REST API endpoints for file upload and result retrieval
+  - Implementation: `file_parser_service.py`
+
+- **Self-Hosted MinerU**:
+  - Uses `/file_parse` endpoint (no token required)
+  - Returns ZIP file response containing parsing results
+  - Automatically extracts and processes the ZIP response
+  - Implementation: `utils/self_hosted_mineru.py` and `pdf_to_pptx.py`
+
+The detection logic checks if `MINERU_API_BASE` points to a self-hosted instance and automatically routes to the appropriate API flow. See the implementation in [`utils/self_hosted_mineru.py`](utils/self_hosted_mineru.py) and [`pdf_to_pptx.py`](pdf_to_pptx.py) for details.
+
+## Self-Hosting MinerU
+
+To run your own MinerU API server:
+
+1. **Install MinerU**:
+   ```bash
+   python3 -m pip install -U 'mineru[core]'
+   ```
+
+2. **Download models**:
+   ```bash
+   mineru-models-download -s modelscope -m all
+   ```
+
+3. **Start the API server**:
+   ```bash
+   MINERU_MODEL_SOURCE=local mineru-api --host 0.0.0.0 --port <port>
+   ```
+   Replace `<port>` with your desired port number (e.g., `8023`).
+
+4. **Configure `.env`**:
+   ```bash
+   MINERU_API_BASE=http://<host>:<port>
+   ```
+   For example: `MINERU_API_BASE=http://localhost:8023` or `MINERU_API_BASE=http://ai23.labs.hpecorp.net:8023`
+   
+   Note: `MINERU_TOKEN` is not required when using self-hosted MinerU.
 
 ## Usage
 
@@ -102,11 +158,12 @@ pdf-to-pptx/
 ├── prompts.py                  # AI prompts
 ├── export_service.py           # PPTX generation
 ├── export_service_inpainting.py # Inpainting integration
-├── file_parser_service.py      # MinerU PDF parsing
+├── file_parser_service.py      # MinerU PDF parsing (cloud)
 ├── image_editability_service.py # Image processing
 ├── inpainting_service.py       # VolcEngine inpainting
 ├── ai_providers/               # AI provider implementations
 ├── utils/                      # Utility functions
+│   └── self_hosted_mineru.py  # Self-hosted MinerU client
 └── templates/                  # Template PPTX files
 ```
 
