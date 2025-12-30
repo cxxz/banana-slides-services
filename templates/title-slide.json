@@ -1,0 +1,67 @@
+{
+  "slide-0": {
+    "shape-0": {
+      "left": 0.41,
+      "top": 1.8,
+      "width": 10.95,
+      "height": 1.72,
+      "placeholder_type": "CENTER_TITLE",
+      "default_font_size": 48.0,
+      "paragraphs": [
+        {
+          "text": "HPE Agentic AI OS"
+        }
+      ]
+    },
+    "shape-1": {
+      "left": 0.41,
+      "top": 3.75,
+      "width": 10.95,
+      "height": 0.45,
+      "placeholder_type": "SUBTITLE",
+      "default_font_size": 20.0,
+      "overflow": {
+        "frame": {
+          "overflow_bottom": 0.07
+        }
+      },
+      "paragraphs": [
+        {
+          "text": "Liam Di"
+        }
+      ]
+    },
+    "shape-2": {
+      "left": 0.41,
+      "top": 4.2,
+      "width": 10.95,
+      "height": 0.37,
+      "placeholder_type": "BODY",
+      "default_font_size": 16.0,
+      "paragraphs": [
+        {
+          "text": "October 2025"
+        }
+      ]
+    },
+    "shape-3": {
+      "left": 5.55,
+      "top": 7.0,
+      "width": 6.8,
+      "height": 0.21,
+      "placeholder_type": "FOOTER",
+      "default_font_size": 9.0,
+      "overflow": {
+        "frame": {
+          "overflow_bottom": 0.15
+        }
+      },
+      "paragraphs": [
+        {
+          "text": "Confidential | Authorized HPE Partner Use Only",
+          "alignment": "RIGHT"
+        }
+      ]
+    }
+  }
+}

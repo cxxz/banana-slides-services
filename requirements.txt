@@ -1,0 +1,19 @@
+# PDF processing
+PyMuPDF>=1.24.0
+
+# PowerPoint generation
+python-pptx>=0.6.21
+img2pdf>=0.5.1
+
+# Image processing
+Pillow>=10.0.0
+
+# HTTP requests
+requests>=2.31.0
+
+# Document parsing
+markitdown>=0.0.1a1
+
+# Utilities
+python-dotenv>=1.0.0
+tenacity>=8.2.0

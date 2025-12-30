@@ -1,0 +1,37 @@
+{
+  "slide-0": {
+    "shape-0": {
+      "left": 0.31,
+      "top": 0.43,
+      "width": 12.57,
+      "height": 0.44,
+      "placeholder_type": "TITLE",
+      "overflow": {
+        "frame": {
+          "overflow_bottom": 0.08
+        }
+      },
+      "paragraphs": [
+        {
+          "text": "Slide Title",
+          "font_name": "HPE Graphik Semibold",
+          "font_size": 30.0
+        }
+      ]
+    },
+    "shape-1": {
+      "left": 4.07,
+      "top": 6.7,
+      "width": 8.18,
+      "height": 0.45,
+      "placeholder_type": "FOOTER",
+      "paragraphs": [
+        {
+          "text": "Confidential | Authorized HPE Partner Use Only",
+          "alignment": "RIGHT",
+          "font_name": "HPE Graphik"
+        }
+      ]
+    }
+  }
+}
