@@ -31,8 +31,8 @@ Convert PDF slides into editable PowerPoint presentations with AI-powered backgr
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/pdf-to-pptx.git
-cd pdf-to-pptx
+git clone https://github.com/cxxz/banana-slides-services.git
+cd banana-slides-services
 
 # Create virtual environment
 python -m venv venv
@@ -105,11 +105,8 @@ To run your own MinerU API server:
 
 4. **Configure `.env`**:
    ```bash
-   MINERU_API_BASE=http://<host>:<port>
+   MINERU_API_BASE=http://<mineru-server-ip>:<mineru-api-service-port>
    ```
-   For example: `MINERU_API_BASE=http://localhost:8023` or `MINERU_API_BASE=http://ai23.labs.hpecorp.net:8023`
-   
-   Note: `MINERU_TOKEN` is not required when using self-hosted MinerU.
 
 ## Usage
 
@@ -152,7 +149,7 @@ The converter will extract fonts and colors from these templates and apply them 
 ## Project Structure
 
 ```
-pdf-to-pptx/
+banana-slides-services/
 ├── pdf_to_pptx.py              # Main CLI entry point
 ├── config.py                   # Configuration management
 ├── prompts.py                  # AI prompts
