@@ -397,18 +397,30 @@ class FileParserService:
             import uuid
             extract_id = str(uuid.uuid4())[:8]
             
-            # Get upload folder from Flask config (we'll need to pass this)
-            # For now, use a hardcoded path relative to project root
+            # Prefer explicit upload folder (env/Flask config), fall back to legacy path.
             import os
             from pathlib import Path
-            
-            # Navigate to project root (assuming this file is in backend/services/)
-            current_file = Path(__file__).resolve()
-            backend_dir = current_file.parent.parent
-            project_root = backend_dir.parent
-            
+
+            upload_folder = os.getenv('UPLOAD_FOLDER')
+            if not upload_folder:
+                try:
+                    from flask import current_app
+                    if current_app and hasattr(current_app, 'config'):
+                        upload_folder = current_app.config.get('UPLOAD_FOLDER')
+                except (RuntimeError, ImportError):
+                    pass
+
+            if upload_folder:
+                upload_root = Path(upload_folder)
+            else:
+                # Navigate to project root (assuming this file is in backend/services/)
+                current_file = Path(__file__).resolve()
+                backend_dir = current_file.parent.parent
+                project_root = backend_dir.parent
+                upload_root = project_root / 'uploads'
+
             # Create directory for mineru extracts
-            mineru_storage = project_root / 'uploads' / 'mineru_files' / extract_id
+            mineru_storage = upload_root / 'mineru_files' / extract_id
             mineru_storage.mkdir(parents=True, exist_ok=True)
             
             logger.info(f"Extracting ZIP to: {mineru_storage}")
@@ -704,4 +716,3 @@ class FileParserService:
         except Exception as e:
             logger.warning(f"Failed to generate caption for {image_url}: {str(e)}")
             return ""  # Return empty string on failure
-

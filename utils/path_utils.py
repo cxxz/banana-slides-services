@@ -29,11 +29,23 @@ def convert_mineru_path_to_local(mineru_path: str, project_root: Optional[Path] 
         
         # Get project root if not provided
         if project_root is None:
+            upload_folder = os.getenv('UPLOAD_FOLDER')
+            if not upload_folder:
+                try:
+                    from flask import current_app
+                    if current_app and hasattr(current_app, 'config'):
+                        upload_folder = current_app.config.get('UPLOAD_FOLDER')
+                except (RuntimeError, ImportError):
+                    pass
+
+            if upload_folder:
+                return Path(upload_folder) / 'mineru_files' / rel_path
+
             # Navigate to project root (assuming this file is in backend/utils/)
             current_file = Path(__file__).resolve()
             backend_dir = current_file.parent.parent
             project_root = backend_dir.parent
-        
+
         # Construct full path: {project_root}/uploads/mineru_files/{rel_path}
         local_path = project_root / 'uploads' / 'mineru_files' / rel_path
         
@@ -109,4 +121,3 @@ def find_file_with_prefix(file_path: Path) -> Optional[Path]:
                 logger.warning(f"Failed to list directory {dirpath}: {str(e)}")
     
     return None
-

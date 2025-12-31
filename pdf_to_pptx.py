@@ -26,6 +26,7 @@ Template Support:
 import os
 import sys
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 
@@ -223,7 +224,14 @@ def main(pdf_path: str, output_dir: str = None, template_dir: str = None, mineru
         output_dir = script_dir / "output_files"
     else:
         output_dir = Path(output_dir)
-    images_dir = output_dir / "images"
+    base_output_dir = Path(output_dir)
+
+    # Actual output location for this run:
+    #   <output_dir>/<base_input_filename>_<YYYYMMDD-HHMMSS>/
+    pdf_name = Path(pdf_path).stem
+    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    run_dir = base_output_dir / f"{pdf_name}_{timestamp}"
+    images_dir = run_dir / "images"
     os.makedirs(images_dir, exist_ok=True)
 
     # Setup template directory (default to ./templates)
@@ -236,14 +244,14 @@ def main(pdf_path: str, output_dir: str = None, template_dir: str = None, mineru
             logger.info("No template directory found, using default styling")
 
     # Derive output filename from input
-    pdf_name = Path(pdf_path).stem
-    output_pptx = output_dir / f"{pdf_name}.pptx"
+    output_pptx = run_dir / f"{pdf_name}.pptx"
 
     logger.info("=" * 60)
     logger.info("PDF to Editable PPTX Converter")
     logger.info("=" * 60)
     logger.info(f"Input: {pdf_path}")
-    logger.info(f"Output directory: {output_dir}")
+    logger.info(f"Output directory: {base_output_dir}")
+    logger.info(f"Run output directory: {run_dir}")
     logger.info("")
 
     # Step 1: PDF to images (kept in output_files/images/)
@@ -280,9 +288,9 @@ def main(pdf_path: str, output_dir: str = None, template_dir: str = None, mineru
         extract_id = parse_pdf_with_mineru(pdf_path, os.path.basename(pdf_path))
 
         # Determine MinerU result directory
-        # Note: file_parser_service.py uses a specific path calculation:
+        # If UPLOAD_FOLDER is set, match FileParserService extraction location.
+        # Otherwise fall back to FileParserService's legacy path calculation:
         #   current_file.parent.parent.parent / 'uploads' / 'mineru_files'
-        # This means: script_dir -> parent -> parent -> uploads
         # For /Users/bill/workspace/banana-slides-services, this becomes /Users/bill/uploads
         upload_folder = os.getenv('UPLOAD_FOLDER')
         if not upload_folder:
@@ -342,8 +350,8 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-o", "--output-dir",
-        default=None,
-        help="Output directory (default: ./output_files)"
+        default="./test_output",
+        help="Output directory (default: ./test_output)"
     )
     parser.add_argument(
         "-t", "--template-dir",
