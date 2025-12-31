@@ -6,7 +6,7 @@ Convert PDF slides into editable PowerPoint presentations with AI-powered backgr
 
 ## Features
 
-- **PDF to Images**: Converts PDF pages to high-quality PNG images (2x scaling)
+- **PDF to Images**: Converts PDF pages to PNG images at native PDF size
 - **Text Extraction**: Uses MinerU service to extract text positions and content
 - **Background Cleaning**: AI-powered inpainting removes text/icons to create clean backgrounds
 - **Editable Output**: Generates PPTX with positioned text boxes over clean backgrounds

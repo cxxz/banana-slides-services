@@ -61,7 +61,7 @@ UPLOAD_FOLDER         # Custom upload folder path
 
 ## Conversion Pipeline
 
-1. **PDF → Images**: Convert PDF pages to PNG using PyMuPDF (2x scaling)
+1. **PDF → Images**: Convert PDF pages to PNG using PyMuPDF (native size, no scaling)
 2. **Parse with MinerU**: Extract text positions, fonts, and content via MinerU API
 3. **Generate Backgrounds**: Use VolcEngine inpainting to remove text/icons (optional)
 4. **Build PPTX**: Create editable slides with positioned text boxes over backgrounds
@@ -103,4 +103,3 @@ Place template files in `templates/` directory:
 - `non-title-slide.pptx` - Template for content slides
 
 Fonts and colors are extracted and applied to generated presentations.
-

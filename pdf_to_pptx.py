@@ -66,8 +66,8 @@ def pdf_to_images(pdf_path: str, output_dir: str) -> List[str]:
     logger.info(f"  PDF has {len(doc)} pages")
 
     for i, page in enumerate(doc):
-        # 2x scaling for high quality output
-        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+        # Render at native PDF size to preserve original page dimensions
+        pix = page.get_pixmap()
         img_path = os.path.join(output_dir, f"page_{i:03d}.png")
         pix.save(img_path)
         image_paths.append(img_path)
